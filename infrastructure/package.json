@@ -1,0 +1,20 @@
+{
+  "name": "@instagram-service/infrastructure",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "deploy": "pulumi up",
+    "destroy": "pulumi destroy",
+    "preview": "pulumi preview"
+  },
+  "dependencies": {
+    "@pulumi/aws": "^5.0.0",
+    "@pulumi/pulumi": "^3.0.0",
+    "@pulumi/awsx": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "typescript": "^4.9.5"
+  }
+}

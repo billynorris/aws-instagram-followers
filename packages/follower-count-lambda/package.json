@@ -1,0 +1,18 @@
+{
+  "name": "@instagram-service/follower-count-lambda",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc && npm run bundle",
+    "bundle": "esbuild src/index.ts --bundle --platform=node --target=node18 --format=cjs --outfile=dist/bundle.js --external:@aws-sdk/*",
+    "test": "jest",
+    "clean": "rm -rf dist coverage"
+  },
+  "dependencies": {
+    "@instagram-service/common": "1.0.0",
+    "axios": "^1.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.19.4"
+  }
+}

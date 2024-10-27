@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "composite": false,
+    "incremental": true,
+    "sourceMap": false,
+    "baseUrl": ".",
+    "paths": {
+      "@instagram-service/*": ["packages/*/src"]
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

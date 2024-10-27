@@ -1,0 +1,22 @@
+{
+  "name": "@instagram-service/common",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch": "^3.418.0",
+    "@aws-sdk/client-dynamodb": "^3.418.0",
+    "@aws-sdk/lib-dynamodb": "^3.418.0",
+    "@middy/core": "^4.6.0",
+    "@middy/http-json-body-parser": "^4.6.0",
+    "@middy/validator": "^4.6.0",
+    "axios": "^1.5.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119"
+  }
+}
