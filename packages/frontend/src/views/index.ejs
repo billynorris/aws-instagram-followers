@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Instagram Follower Counter</title>
+    <style>
+      body {
+        font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        line-height: 1.5;
+      }
+      .container {
+        text-align: center;
+      }
+      .button {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: #0095f6;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+      .button:hover {
+        background-color: #0081d6;
+      }
+      .input-group {
+        margin: 2rem 0;
+      }
+      input {
+        padding: 8px;
+        margin-right: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .result {
+        margin-top: 2rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Instagram Follower Counter</h1>
+      <p>Track your Instagram followers</p>
+
+      <a href="/prod/auth/initiate" class="button">Connect Instagram</a>
+
+      <div class="input-group">
+        <input type="text" id="username" placeholder="Enter Instagram username" />
+        <button onclick="checkFollowers()" class="button">Check Followers</button>
+      </div>
+
+      <div id="result" class="result"></div>
+    </div>
+
+    <script>
+      async function checkFollowers() {
+        const username = document.getElementById('username').value;
+        if (!username) return;
+
+        const resultDiv = document.getElementById('result');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = 'Loading...';
+
+        try {
+          const response = await fetch(`/prod/api/v1/users/${username}/followers`);
+          const data = await response.json();
+
+          if (response.ok) {
+            resultDiv.innerHTML = `
+                        <h3>@${data.username}</h3>
+                        <p>Followers: ${data.followerCount}</p>
+                        <p>Last Updated: ${new Date(data.lastFetchedAt * 1000).toLocaleString()}</p>
+                        <p><small>${data.cached ? '(Cached)' : '(Fresh)'}</small></p>
+                    `;
+          } else {
+            resultDiv.innerHTML = `<p style="color: red;">Error: ${data.error || 'Failed to fetch followers'}</p>`;
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `<p style="color: red;">Error: Could not connect to the server</p>`;
+        }
+      }
+    </script>
+  </body>
+</html>

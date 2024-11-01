@@ -18,19 +18,17 @@ const initiateAuthHandler: APIGatewayProxyHandler = async (_event) => {
     const authUrl = new URL('https://api.instagram.com/oauth/authorize');
     authUrl.searchParams.append('client_id', clientId);
     authUrl.searchParams.append('redirect_uri', redirectUri);
-    authUrl.searchParams.append('scope', 'user_profile,user_media');
+    authUrl.searchParams.append('scope', 'instagram_business_basic');
     authUrl.searchParams.append('response_type', 'code');
 
     logger.info('Initiated Instagram OAuth flow');
 
     return {
-      statusCode: 200,
+      statusCode: 302,
       headers: {
-        'Content-Type': 'application/json',
+        Location: authUrl.toString(),
       },
-      body: JSON.stringify({
-        authUrl: authUrl.toString(),
-      }),
+      body: '',
     };
   } catch (error) {
     logger.error('Failed to initiate auth', { error });

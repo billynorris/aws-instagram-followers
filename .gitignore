@@ -9,3 +9,8 @@ coverage/
 *.log
 .pulumi/
 *.backup
+
+node_modules
+**/node_modules
+dist
+**/dist

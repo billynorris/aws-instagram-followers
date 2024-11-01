@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "noEmit": false,        // Make sure this is false or not present
+    "allowJs": false,       // We only want TypeScript
+    "declaration": false     // This will help us see what's being generated
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

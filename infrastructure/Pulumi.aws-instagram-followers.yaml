@@ -1,0 +1,7 @@
+config:
+  instagram-follower-service:environment: prod
+  instagram-follower-service:frontendUrl: https://8nfv7haml9.execute-api.eu-west-2.amazonaws.com/prod
+  instagram-follower-service:instagramClientId: "2252850138433518"
+  instagram-follower-service:instagramClientSecret:
+    secure: AAABABIJsdtWxLvPEellqJphOnyKdKGtFzfN8z5J7f6wyIVNTXVwTRIV+ROOnjqUaxrBMBEnMrjfGDas8UUcyQ==
+  instagram-follower-service:redirectUri: https://8nfv7haml9.execute-api.eu-west-2.amazonaws.com/prod/auth/callback

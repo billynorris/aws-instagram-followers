@@ -9,6 +9,8 @@
   "scripts": {
     "build": "turbo run build",
     "build:lambdas": "turbo run build --filter=./packages/*",
+    "start:frontend": "cd packages/frontend && npm start",
+    "dev:frontend": "cd packages/frontend && npm run dev",
     "test": "turbo run test",
     "lint": "turbo run lint",
     "clean": "turbo run clean",

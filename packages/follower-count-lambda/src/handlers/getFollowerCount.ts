@@ -1,22 +1,9 @@
 import { APIGatewayProxyHandler } from 'aws-lambda';
-import axios from 'axios';
-import {
-  withCommonMiddleware,
-  Cache,
-  Metrics,
-  ValidationError,
-  AuthenticationError,
-  InstagramAPIError,
-  logger,
-} from '@instagram-service/common';
+import { withCommonMiddleware, ValidationError, logger } from '@instagram-service/common';
+import { getFollowerCount, refreshAccessToken } from 'packages/common/src/utils/instagram';
+import { getUser, updateUser } from 'packages/common/src/utils/db';
 
-interface FollowerCount {
-  username: string;
-  follower_count: number;
-  timestamp: string;
-}
-
-const inputSchema = {
+const _inputSchema = {
   type: 'object',
   required: ['pathParameters'],
   properties: {
@@ -32,106 +19,67 @@ const inputSchema = {
 
 const getFollowerCountHandler: APIGatewayProxyHandler = async (event) => {
   try {
-    const accessToken = event.headers.authorization?.replace('Bearer ', '');
-    const userId = event.pathParameters?.userId;
-
-    if (!accessToken) {
-      throw new AuthenticationError('Access token is required');
+    const username = event.pathParameters?.username;
+    if (!username) {
+      throw new ValidationError('Username is required');
     }
 
-    if (!userId) {
-      throw new ValidationError('User ID is required');
+    // Get user from DB
+    const user = await getUser(username);
+    if (!user) {
+      throw new ValidationError('User not found');
     }
 
-    // Add context for logging
-    logger.addContext({ userId });
+    const now = Math.floor(Date.now() / 1000);
+    const ONE_MINUTE = 60;
 
-    // Check cache first
-    const startTime = Date.now();
-    const cachedData = await Cache.get<FollowerCount>(userId);
-
-    if (cachedData) {
-      await Metrics.recordMetric('CacheHit', 1);
-      logger.info('Returning cached follower count', {
-        username: cachedData.username,
-        age: Date.now() - new Date(cachedData.timestamp).getTime(),
-      });
-
+    // Check if we have a recent follower count
+    if (user.lastFetchedAt && user.followerCount && now - user.lastFetchedAt < ONE_MINUTE) {
+      logger.info('Returning cached follower count', { username });
       return {
         statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
-          ...cachedData,
+          username: user.username,
+          followerCount: user.followerCount,
+          lastFetchedAt: user.lastFetchedAt,
           cached: true,
         }),
       };
     }
 
-    await Metrics.recordMetric('CacheMiss', 1);
-
-    // Fetch from Instagram API
-    try {
-      const response = await axios.get(`https://graph.instagram.com/${userId}`, {
-        params: {
-          fields: 'username,followers_count',
-          access_token: accessToken,
-        },
-      });
-
-      const responseData: FollowerCount = {
-        username: response.data.username,
-        follower_count: response.data.followers_count,
-        timestamp: new Date().toISOString(),
-      };
-
-      // Store in cache
-      await Cache.set(userId, responseData);
-
-      // Record API latency
-      const latency = Date.now() - startTime;
-      await Metrics.recordMetric('APILatency', latency, 'Milliseconds');
-
-      logger.info('Successfully fetched follower count', {
-        username: responseData.username,
-        latency,
-      });
-
-      return {
-        statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...responseData,
-          cached: false,
-        }),
-      };
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 429) {
-          throw new InstagramAPIError('Rate limit exceeded', {
-            retryAfter: error.response.headers['retry-after'],
-          });
-        }
-
-        throw new InstagramAPIError(
-          error.response?.data?.error?.message || 'Failed to fetch follower count',
-          {
-            status: error.response?.status,
-            data: error.response?.data,
-          }
-        );
-      }
-      throw error;
+    // Check if token needs refresh (refresh if less than 1 minute until expiry)
+    let accessToken = user.accessToken;
+    if (user.tokenExpiresAt - now < ONE_MINUTE) {
+      logger.info('Refreshing access token', { username });
+      const refreshedToken = await refreshAccessToken(accessToken);
+      accessToken = refreshedToken.access_token;
+      user.accessToken = accessToken;
+      user.tokenExpiresAt = now + refreshedToken.expires_in;
     }
+
+    // Fetch new follower count
+    const followerCount = await getFollowerCount(accessToken);
+
+    // Update DB
+    await updateUser({
+      ...user,
+      followerCount,
+      lastFetchedAt: now,
+    });
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        username: user.username,
+        followerCount,
+        lastFetchedAt: now,
+        cached: false,
+      }),
+    };
   } catch (error) {
-    logger.error('Failed to get follower count', { error });
+    logger.error('Failed to get follower count', error);
     throw error;
   }
 };
 
-export const handler = withCommonMiddleware(getFollowerCountHandler, {
-  inputSchema,
-});
+export const handler = withCommonMiddleware(getFollowerCountHandler);

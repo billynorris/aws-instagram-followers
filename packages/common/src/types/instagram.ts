@@ -6,5 +6,8 @@ export interface InstagramAuthResponse {
 export interface InstagramUser {
   id: string;
   username: string;
-  followers_count: number;
+  accessToken: string;
+  tokenExpiresAt: number;
+  lastFetchedAt?: number;
+  followerCount?: number;
 }
