@@ -102,6 +102,8 @@ class Counter:
             print("No animation required.")
             return False
         
+        print("\n")
+
         self._draw_logo()
         
         # Digits for current and next value
@@ -112,11 +114,14 @@ class Counter:
         total_frames = 8  # Adjust for smoother animation
         
         # Find the rightmost digit still animating
-        rightmost_animating = None
-        for i in range(5, -1, -1):
+        leftmost_animating = None
+        for i in range(6):
             if self.digit_frames[i] > 0:
-                rightmost_animating = i
+                leftmost_animating = i
                 break
+        
+        print(f"Digit frames: {self.digit_frames}")
+        print(f"Leftmost animating digit index: {leftmost_animating}")
         
         for i in range(6):
             x, base_y = self.digit_positions[i]
@@ -135,16 +140,20 @@ class Counter:
                 self.digit_frames[i] += 1
                 
                 if frame == total_frames // 2 and i > 0 and current_digits[i-1] != next_digits[i-1]:
+                    # Start the animation for the number before me
                     self.digit_frames[i-1] = 1
                 
                 if frame >= total_frames:
+                    # Finish the animation for this number
                     self.digit_frames[i] = 0
-                    if rightmost_animating is not None and i == rightmost_animating:
+                
+                    if leftmost_animating is not None and i == leftmost_animating:
                         self.current_value += 1 if self.stepping_up else -1
                         print(f"Updated current value to {self.current_value}")
                         if self.current_value != self.target_value:
                             self.digit_frames[5] = 1
             else:
+                # If all digits to the right are done
                 all_right_done = all(self.digit_frames[j] == 0 for j in range(i + 1, 6))
                 digit_to_show = next_digits[i] if all_right_done else current_digits[i]
                 self._draw_digit(digit_to_show, x, base_y)
