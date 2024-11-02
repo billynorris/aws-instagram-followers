@@ -38,11 +38,11 @@ class Counter:
         self.digit_positions = [(8 + i * 4, 2) for i in range(6)]  # (x, y) for each digit
         self.digit_frames = [0] * 6  # Animation frame counter for each digit
         
-        print(f"Initialized Counter with initial value: {initial_value}")
+        # print(f"Initialized Counter with initial value: {initial_value}")
 
     def _draw_logo(self):
         """Draw the Instagram logo"""
-        print("Drawing logo")
+        # print("Drawing logo")
         for y in range(8):
             for x in range(8):
                 if LOGO[y] & (1 << (7 - x)):
@@ -60,7 +60,7 @@ class Counter:
     
     def _draw_digit(self, digit, x, y):
         """Draw a single digit using the tiny font"""
-        print(f"Drawing digit {digit} at position ({x}, {y})")
+        # print(f"Drawing digit {digit} at position ({x}, {y})")
         if y > -5 and y < 8:  # Only draw if potentially visible
             pattern = TINY_FONT[digit]
             for row in range(5):
@@ -76,19 +76,19 @@ class Counter:
         for _ in range(6):
             digits.append(value % 10)
             value //= 10
-        print(f"Converted {value} to digits {digits[::-1]}")
+        # print(f"Converted {value} to digits {digits[::-1]}")
         return digits[::-1]
     
     def set_value(self, new_value):
         """Set a new target value and initiate animation if changed"""
-        print(f"Setting value to {new_value} (current: {self.current_value})")
+        # print(f"Setting value to {new_value} (current: {self.current_value})")
         if new_value != self.current_value:
             self.target_value = new_value
             self.stepping_up = new_value > self.current_value
             self.is_animating = True
             self.digit_frames = [0] * 6
             self.digit_frames[5] = 1  # Start animation on rightmost digit
-    
+        
     def update(self):
         """Update display with current animation frame or static value"""
         if not self.is_animating:
@@ -99,10 +99,10 @@ class Counter:
         if self.current_value == self.target_value:
             self._draw_static_number(self.current_value)
             self.is_animating = False
-            print("No animation required.")
+            # print("No animation required.")
             return False
         
-        print("\n")
+        # print("\n")
 
         self._draw_logo()
         
@@ -111,17 +111,17 @@ class Counter:
         next_digits = self._number_to_digits(self.current_value + (1 if self.stepping_up else -1))
         
         any_animation = False
-        total_frames = 8  # Adjust for smoother animation
+        total_frames = 8
         
-        # Find the rightmost digit still animating
+        # Find the leftmost digit still animating
         leftmost_animating = None
         for i in range(6):
             if self.digit_frames[i] > 0:
                 leftmost_animating = i
                 break
         
-        print(f"Digit frames: {self.digit_frames}")
-        print(f"Leftmost animating digit index: {leftmost_animating}")
+        # print(f"Digit frames: {self.digit_frames}")
+        # print(f"Leftmost animating digit index: {leftmost_animating}")
         
         for i in range(6):
             x, base_y = self.digit_positions[i]
@@ -139,34 +139,40 @@ class Counter:
                 
                 self.digit_frames[i] += 1
                 
-                if frame == total_frames // 2 and i > 0 and current_digits[i-1] != next_digits[i-1]:
+                if frame == total_frames // 4 and i > 0 and current_digits[i-1] != next_digits[i-1]:
                     # Start the animation for the number before me
                     self.digit_frames[i-1] = 1
                 
                 if frame >= total_frames:
                     # Finish the animation for this number
                     self.digit_frames[i] = 0
-                
+                    
                     if leftmost_animating is not None and i == leftmost_animating:
                         self.current_value += 1 if self.stepping_up else -1
-                        print(f"Updated current value to {self.current_value}")
+                        # print(f"Updated current value to {self.current_value}")
                         if self.current_value != self.target_value:
                             self.digit_frames[5] = 1
+                            # Recalculate digits for the new current value
+                            current_digits = self._number_to_digits(self.current_value)
+                            next_digits = self._number_to_digits(self.current_value + (1 if self.stepping_up else -1))
             else:
-                # If all digits to the right are done
-                all_right_done = all(self.digit_frames[j] == 0 for j in range(i + 1, 6))
-                digit_to_show = next_digits[i] if all_right_done else current_digits[i]
+                # Show next value for digits to the right of animating digit,
+                # except when digit_frames[5] has just been set
+                use_next = (leftmost_animating is not None and 
+                        i > leftmost_animating and 
+                        not (leftmost_animating == 5 and self.digit_frames[5] == 1))
+                digit_to_show = next_digits[i] if use_next else current_digits[i]
                 self._draw_digit(digit_to_show, x, base_y)
         
         self.display.show()
         
         if not any_animation and self.current_value == self.target_value:
             self.is_animating = False
-            print("Animation complete")
+            # print("Animation complete")
         
         return True
     
     def set_brightness(self, value):
         """Set display brightness (0-15)"""
-        print(f"Setting brightness to {value}")
+        # print(f"Setting brightness to {value}")
         self.display.brightness(value)
